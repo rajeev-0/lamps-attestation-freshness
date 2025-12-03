@@ -223,8 +223,10 @@ Section 5.3.19 of {{I-D.ietf-lamps-rfc4210bis}} defines the
 general request message (genm) and general response (genp).
 The NonceRequest payload of the genm message, sent by the end
 entity to request a nonce, optionally includes details on the
-required length of the nonce from the Attester. The NonceResponse
-payload of the genp message, sent by the CA/RA in response to the
+required length of the nonce and additional data from the
+Attester. Additional data may be used by verifier to authenticate
+the Attester. The NonceResponse payload of the genp message,
+sent by the CA/RA in response to the
 request, contains the nonce itself.
 
 ~~~
@@ -238,6 +240,8 @@ request, contains the nonce itself.
     -- indicates the required length of the requested nonce
     type EVIDENCE-STATEMENT.&id({EvidenceStatementSet}) OPTIONAL,
     -- indicates which Evidence type to request a nonce for
+    data OCTET STRING OPTIONAL,
+    -- additional data from Attester
     hint UTF8String OPTIONAL
     -- indicates which Verifier to request a nonce from
  }
@@ -253,6 +257,8 @@ request, contains the nonce itself.
     -- the nonce valid
     type EVIDENCE-STATEMENT.&id({EvidenceStatementSet}) OPTIONAL,
     -- indicates which Evidence type to request a nonce for
+    data OCTET STRING OPTIONAL,
+    -- additional data from Verifier
     hint UTF8String OPTIONAL
     -- indicates which Verifier to request a nonce from
  }
@@ -393,10 +399,11 @@ or a hint about the verification service, are included in the request.
 
 The payload in a POST request MUST be of content-type "application/json" and
 MUST contain an array of JSON objects {{RFC8259}} with the optional members
-"len", "type", and "hint".
+"len", "type", "data" and "hint".
 
 - The optional "len" member indicates the length of the requested nonce value in bytes.
 - The optional "type" member contains an EvidenceStatement OID (dotted-decimal string) as defined in {{I-D.ietf-lamps-csr-attestation}}.
+- The optional "data" member contains additional data from Attester.
 - The optional "hint" member contains an FQDN or URI identifying the Verifier, following the EvidenceHint structure as defined in {{I-D.ietf-lamps-csr-attestation}}.
 
 The order of objects in the JSON array is significant and MUST be preserved by the server.
@@ -431,7 +438,7 @@ If successful, the EST server MUST respond with an HTTP 200 status code and a
 content-type of "application/json", containing an array of JSON objects {{RFC8259}} with
 the "nonce" member. The "expiry" member is optional and indicates the absolute
 expiry time of the nonce encoded as an RFC 3339 timestamp string. The optional
-"type" and "hint" members MAY be copied from the request to aid correlation.
+"type" and "hint" members MAY be copied from the request to aid correlation. The optional "data" member may be used to provide additional data to Attester.
 
 Note: CMP encodes "expiry" as an INTEGER representing seconds of validity.
 EST encodes "expiry" as an absolute timestamp.
